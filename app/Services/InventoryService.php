@@ -22,7 +22,6 @@ class InventoryService
 
     public function increaseStock($productId, $quantity)
     {
-        dd($productId, $quantity);
         $product = $this->productRepo->find($productId);
         $product->stock += $quantity;
         $product->save();
