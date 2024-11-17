@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Repositories\CartRepo;
 use App\Repositories\ProductRepo;
+use Illuminate\Validation\ValidationException;
 
 class CartService
 {
@@ -23,12 +24,16 @@ class CartService
 
     public function getCart()
     {
-        return $this->cartRepo->all()->products;
+        return $this->cartRepo->all() ? $this->cartRepo->all()->products : [];
     }
 
     public function addToCart($data)
     {
         $this->cartRepo->create($data);
+        if ($this->cartRepo->all()->items->where('product_id', $data['product_id'])) {
+            throw ValidationException::withMessages(['product_exists' => 'Product already exists in the cart.']);
+        }
+
         $this->inventoryService->reduceStock($data);
         return $this->getCart();
     }

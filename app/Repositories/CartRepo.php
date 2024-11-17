@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Jobs\ClearCartJob;
 use App\Models\Cart;
 use App\Models\User;
 use Illuminate\Support\Facades\Redis;
@@ -32,6 +33,10 @@ class CartRepo implements RepositoryInterface
     public function create(array $data)
     {
         $cart = $this->user->cart ?: $this->user->cart()->create(['user_id' => $this->user->id]);
+        if($cart->wasRecentlyCreated){
+            // ClearCartJob::dispatch($cart)->delay(now()->addHours(24));
+            ClearCartJob::dispatch($cart)->delay(now()->addMinutes(1));
+        }
         $cart->items()->firstOrCreate([
             'product_id' => $data['product_id'],
         ],[
