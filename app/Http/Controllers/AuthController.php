@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreAuthRequest;
 use App\Models\User;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -21,57 +23,47 @@ class AuthController extends Controller
      *
      * @OA\Info(
      *      version="1.0.0",
-     *      title="Marco Api Document",
-     *      description="This is the API documentation for our project.",
+     *      title="CartTask Api Document",
+     *      description="This is the API documentation for cart task.",
      *      @OA\Contact(
      *          email="alibabaeian670@gmail.com"
      *      )
      * )
+     *
      * @OA\Post(
      *      path="/api/login",
      *      summary="Login user",
      *      tags={"Auth"},
-     *      description="Login user with phone number and code",
-     *      @OA\Parameter(
-     *          name="phone",
-     *          in="query",
-     *          description="Login with phone number",
+     *      description="Login user with email & password",
+     *      @OA\RequestBody(
      *          required=true,
-     *          @OA\Schema(
-     *              type="string"
-     *          )
-     *      ),
-     *      @OA\Parameter(
-     *          name="code",
-     *          in="query",
-     *          description="Verification code",
-     *          required=false,
-     *          @OA\Schema(
-     *              type="string"
+     *          @OA\JsonContent(
+     *              required={"email", "password"},
+     *              @OA\Property(property="email", type="string", format="email", description="Email address"),
+     *              @OA\Property(property="password", type="string", format="password", description="Password")
      *          )
      *      ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful login",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="token", type="string"),
-     *             @OA\Property(property="client_id", type="integer"),
-     *             @OA\Property(property="client_secret", type="string")
-     *         )
+     *          @OA\JsonContent(
+     *              @OA\Property(property="token", type="string", example="eyJhbGciOiJIUzI1NiIsInR5...")
+     *          )
      *      ),
      *      @OA\Response(
-     *          response=203,
-     *          description="Verification code error",
+     *          response=401,
+     *          description="Invalid",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="message", type="string", example="Invalid credentials provided.")
+     *          )
      *      )
      * )
+     *
      * @OA\SecurityScheme(
+     *     securityScheme="bearerAuth",
      *     type="http",
-     *     description="Use Passport bearer token to access protected endpoints",
-     *     name="Authorization",
-     *     in="header",
      *     scheme="bearer",
-     *     bearerFormat="JWT",
-     *     securityScheme="passport",
+     *     bearerFormat="JWT"
      * )
      */
 
@@ -84,6 +76,7 @@ class AuthController extends Controller
                 'token' => $user->createToken(env('APP_NAME'))->plainTextToken,
             ];
         }
+        throw new AuthenticationException('Invalid credentials provided.');
     }
 
     /**

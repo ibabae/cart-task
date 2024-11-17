@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Product;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Nette\Schema\ValidationException;
+use Illuminate\Contracts\Validation\Validator;
 
 class UpdateProductRequest extends FormRequest
 {
@@ -27,4 +29,10 @@ class UpdateProductRequest extends FormRequest
             'stock' => 'required|integer|min:0',
         ];
     }
+
+    // public function failedValidation(Validator $validator)
+    // {
+    //     throw new ValidationException($validator->errors());
+    // }
+
 }
