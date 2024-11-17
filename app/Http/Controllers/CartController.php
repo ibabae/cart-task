@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Cart\StoreCartRequest;
+use App\Http\Resources\IndexCartResource;
 use App\Services\CartService;
 use Illuminate\Http\Request;
 
@@ -20,7 +21,8 @@ class CartController extends Controller
      */
     public function index()
     {
-        return $this->cartService->getCart();
+        $data = $this->cartService->getCart();
+        return new IndexCartResource($data);
     }
 
     /**
@@ -28,7 +30,8 @@ class CartController extends Controller
      */
     public function store(StoreCartRequest $request)
     {
-        return $this->cartService->addToCart($request->validated());
+        $data = $this->cartService->addToCart($request->validated());
+        return new IndexCartResource($data);
     }
 
     /**
@@ -52,6 +55,7 @@ class CartController extends Controller
      */
     public function destroy($productId)
     {
-        return $this->cartService->removeFromCart($productId);
+        $data = $this->cartService->removeFromCart($productId);
+        return new IndexCartResource($data);
     }
 }

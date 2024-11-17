@@ -2,8 +2,7 @@
 
 namespace App\Services;
 
-// use App\Repositories\CartRepo;
-use App\Repositories\CartDBRepo;
+use App\Repositories\CartRepo;
 use App\Repositories\ProductRepo;
 
 class CartService
@@ -13,8 +12,7 @@ class CartService
     protected $inventoryService;
 
     public function __construct(
-        // CartRepo $cartRepo,
-        CartDBRepo $cartRepo,
+        CartRepo $cartRepo,
         ProductRepo $productRepo,
         InventoryService $inventoryService
     ) {
@@ -25,8 +23,7 @@ class CartService
 
     public function getCart()
     {
-        return $this->cartRepo->all();
-        // return $this->cartData($this->cartRepo->all());
+        return $this->cartRepo->all()->products;
     }
 
     public function addToCart($data)
@@ -40,7 +37,7 @@ class CartService
     {
         $cartItem = $this->cartRepo->find($productId);
         if ($cartItem) {
-            $this->inventoryService->increaseStock($productId, $cartItem);
+            $this->inventoryService->increaseStock($productId, $cartItem->quantity);
             $this->cartRepo->delete($productId);
         }
         return $this->getCart();
@@ -49,7 +46,6 @@ class CartService
     private function cartData($data)
     {
         return collect($data)->map(function ($quantity, $productId) {
-            dd($productId);
             $product = $this->productRepo->find($productId);
             return $product ? [
                 'product' => $product,

@@ -2,42 +2,41 @@
 
 namespace App\Repositories;
 
+use App\Models\Cart;
+use App\Models\User;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Validation\ValidationException;
 
 class CartRepo implements RepositoryInterface
 {
-    protected $cartKeyPrefix = 'cart:';
-    protected $userId;
-    protected $cartKey;
+    protected $user;
 
-    public function __construct()
-    {
-        $this->userId = auth()->id();
-        $this->cartKey = $this->getCartKey();
-    }
+    protected $cart;
 
-    private function getCartKey()
+    public function __construct(Cart $cart)
     {
-        return $this->cartKeyPrefix . $this->userId;
+        $this->cart = $cart;
+        $this->user = User::findOrFail(auth()->id());
     }
 
     public function all(){
-        return Redis::hgetall($this->cartKey);
+        return $this->cart->firstWhere('user_id', $this->user->id);
+        // return Card::where
     }
 
     public function find(int $productId)
     {
-        return Redis::hget($this->cartKey, $productId);
+        return $this->user->cart->items->firstWhere('product_id',$productId);
     }
 
     public function create(array $data)
     {
-        if (Redis::hexists($this->cartKey, $data['product_id'])) {
-            throw ValidationException::withMessages(['product_exists'=>'Product is currently exists in your cart.']);
-        }
-        Redis::hset($this->cartKey, $data['product_id'], $data['quantity']);
-        Redis::expire($this->cartKey, 86400); // Expiration of Cart after 24 hours (86400 secounds)
+        $cart = $this->user->cart ?: $this->user->cart()->create(['user_id' => $this->user->id]);
+        $cart->items()->firstOrCreate([
+            'product_id' => $data['product_id'],
+        ],[
+            'quantity' => $data['quantity']
+        ]);
     }
 
     public function update(int $id, array $data)
@@ -46,6 +45,6 @@ class CartRepo implements RepositoryInterface
 
     public function delete(int $productId)
     {
-        Redis::hdel($this->cartKey, $productId);
+        $this->user->cart->items->firstWhere('product_id', $productId)->delete();
     }
 }
