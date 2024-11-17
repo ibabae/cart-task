@@ -48,4 +48,9 @@ class CartRepo implements RepositoryInterface
     {
         Redis::hdel($this->cartKey, $productId);
     }
+
+    public function clear()
+    {
+        Redis::del($this->cartKey);
+    }
 }

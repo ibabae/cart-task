@@ -187,4 +187,36 @@ class CartController extends Controller
     {
         return $this->cartService->removeFromCart($productId);
     }
+
+    /**
+     * @OA\Delete(
+     *      path="/api/cart",
+     *      summary="Clear the user's cart",
+     *      tags={"Cart"},
+     *      description="Remove all items from the authenticated user's cart.",
+     *      security={{"bearer_token": {}}},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Cart cleared successfully",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="status", type="string", example="success"),
+     *              @OA\Property(property="data", type="array", items={})
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthorized - Authentication required",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="status", type="string", example="error"),
+     *              @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *          )
+     *      )
+     * )
+     */
+
+    public function clear()
+    {
+        return $this->cartService->clearCart();
+    }
+
 }

@@ -40,6 +40,13 @@ class CartService
         return $this->getCart();
     }
 
+    public function clearCart()
+    {
+        $this->cartRepo->clear();
+        return $this->getCart();
+    }
+
+
     private function cartData($data)
     {
         $products = Product::whereIn('id', array_keys($data))->get()->keyBy('id');
