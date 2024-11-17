@@ -2,22 +2,19 @@
 
 namespace App\Services;
 
+use App\Models\Product;
 use App\Repositories\CartRepo;
-use App\Repositories\ProductRepo;
 
 class CartService
 {
     protected $cartRepo;
-    protected $productRepo;
     protected $inventoryService;
 
     public function __construct(
         CartRepo $cartRepo,
-        ProductRepo $productRepo,
         InventoryService $inventoryService
     ) {
         $this->cartRepo = $cartRepo;
-        $this->productRepo = $productRepo;
         $this->inventoryService = $inventoryService;
     }
 
@@ -45,12 +42,14 @@ class CartService
 
     private function cartData($data)
     {
-        return collect($data)->map(function ($quantity, $productId) {
-            $product = $this->productRepo->find($productId);
+        $products = Product::whereIn('id', array_keys($data))->get()->keyBy('id');
+        $result = collect($data)->map(function ($quantity, $productId) use ($products) {
+            $product = $products->get($productId);
             return $product ? [
                 'product' => $product,
-                'quantity' => $quantity
+                'quantity' => $quantity,
             ] : null;
         })->filter()->values()->all();
+        return $result;
     }
 }

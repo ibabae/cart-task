@@ -16,9 +16,7 @@ class ProductService{
 
     public function createProduct($data){
         $product = $this->productRepo->create($data);
-        SendProductCreatedMail::dispatch($product)
-        // ->delay(now()->addMinutes(1))
-        ;
+        SendProductCreatedMail::dispatch($product);
         return $product;
     }
 
