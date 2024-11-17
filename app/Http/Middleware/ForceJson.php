@@ -5,6 +5,8 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Validation\ValidationException;
 
 class ForceJson
 {
@@ -17,31 +19,24 @@ class ForceJson
     {
         $request->headers->set('Accept', 'application/json');
         $response = $next($request);
+        $code = match (true) {
+            $response->exception instanceof AuthenticationException => ['unauthenticated', Response::HTTP_UNAUTHORIZED],
+            $response->exception instanceof AuthorizationException => ['unauthorized', Response::HTTP_FORBIDDEN],
+            $response->exception instanceof ModelNotFoundException => ['Not Found', Response::HTTP_NOT_FOUND],
+            $response->exception instanceof NotFoundHttpException => ['Not Found', Response::HTTP_NOT_FOUND],
 
-        // if($request->method() == "DELETE" && $response->status() != 404) {
-        //     return response()->noContent();
-        // } else{
-            $code = match (true) {
-                $response->exception instanceof AuthenticationException => ['unauthenticated', Response::HTTP_UNAUTHORIZED],
-                $response->exception instanceof AuthorizationException => ['unauthorized', Response::HTTP_FORBIDDEN],
-                $response->exception instanceof ModelNotFoundException => ['Not Found', Response::HTTP_NOT_FOUND],
-                $response->exception instanceof NotFoundHttpException => ['Not Found', Response::HTTP_NOT_FOUND],
+            $response->exception instanceof ValidationException => ['Validation Failed', Response::HTTP_UNPROCESSABLE_ENTITY],
+            $response->exception instanceof QueryException => ['Database Error', Response::HTTP_INTERNAL_SERVER_ERROR],
+            $response->exception instanceof \PDOException => ['Database Error', Response::HTTP_INTERNAL_SERVER_ERROR],
+            $response->exception instanceof Exception => ['error', Response::HTTP_UNPROCESSABLE_ENTITY],
 
-                $response->exception instanceof ValidationException => ['Validation Failed', Response::HTTP_UNPROCESSABLE_ENTITY],
-                $response->exception instanceof QueryException => ['Database Error', Response::HTTP_INTERNAL_SERVER_ERROR],
-                $response->exception instanceof \PDOException => ['Database Error', Response::HTTP_INTERNAL_SERVER_ERROR],
-                $response->exception instanceof Exception => ['error', Response::HTTP_UNPROCESSABLE_ENTITY],
+            default => ['success', Response::HTTP_OK],
+        };
+        $data = $response->getData();
 
-                default => ['success', Response::HTTP_OK],
-            };
-            $status = ($response->getStatusCode() === 200) ? true : false;
-            $originalData = $response->getOriginalContent();
-            // dd($response->getStatusCode());
-
-            return response()->json([
-                'status' => $status,
-                'data' => $originalData,
-            ], $response->getStatusCode());
-        // }
+        return response()->json([
+            'status' => $code[0],
+            'data' => $data,
+        ], $code[1]);
     }
 }
