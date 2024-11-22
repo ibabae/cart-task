@@ -30,9 +30,4 @@ class UpdateProductRequest extends FormRequest
         ];
     }
 
-    // public function failedValidation(Validator $validator)
-    // {
-    //     throw new ValidationException($validator->errors());
-    // }
-
 }
