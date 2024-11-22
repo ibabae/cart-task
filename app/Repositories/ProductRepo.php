@@ -31,7 +31,7 @@ class ProductRepo implements RepositoryInterface {
     }
 
     public function delete($id){
-        $this->find($id)->delete();
+        return $this->find($id)->delete();
     }
 
 }
